@@ -1,7 +1,7 @@
-const hash = require('hash.js');
+'use strict';
 
-exports.genHashCode = content =>
-    hash
-        .sha256()
-        .update(content)
-        .digest('hex');
+var hash = require('hash.js');
+
+exports.genHashCode = function (content) {
+    return hash.sha256().update(content).digest('hex');
+};

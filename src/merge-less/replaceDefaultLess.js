@@ -1,7 +1,9 @@
-const fs = require('fs-extra');
+'use strict';
 
-const replaceDefaultLess = lessPath => {
-  const fileContent = fs.readFileSync(lessPath).toString();
+var fs = require('fs-extra');
+
+var replaceDefaultLess = function replaceDefaultLess(lessPath) {
+  var fileContent = fs.readFileSync(lessPath).toString();
   return fileContent;
 };
 module.exports = replaceDefaultLess;
