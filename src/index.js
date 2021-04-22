@@ -1,0 +1,143 @@
+import { join } from 'path';
+import serveStatic from 'serve-static';
+import rimraf from 'rimraf';
+import { existsSync, mkdirSync } from 'fs';
+import uuid from 'uuid';
+
+const buildCss = require('./merge-less');
+const winPath = require('slash2');
+
+export default function (api) {
+    let options = null;
+    const themeConfigPath = winPath(join(api.paths.cwd, 'config/theme.config.json'));
+    if (existsSync(themeConfigPath)) {
+        options = require(themeConfigPath);
+    }
+    if(!options)return;
+    options = {hash:true,...options}
+    if(options.runEnv && options.runEnv !== process.env.NODE_ENV){
+        return;
+    }
+    api.logger.info('✿ Find theme.config.json')
+    api.modifyDefaultConfig((config) => {
+        config.cssLoader = {
+            modules: {
+                getLocalIdent: (
+                    context,
+                    _,
+                    localName,
+                ) => {
+                    if (
+                        context.resourcePath.includes('node_modules') ||
+                        context.resourcePath.includes('ant.design.pro.less') ||
+                        context.resourcePath.includes('global.less')
+                    ) {
+                        return localName;
+                    }
+                    const match = context.resourcePath.match(/src(.*)/);
+                    if (match && match[1]) {
+                        const antdProPath = match[1].replace('.less', '');
+                        const arr = winPath(antdProPath)
+                            .split('/')
+                            .map((a) => a.replace(/([A-Z])/g, '-$1'))
+                            .map((a) => a.toLowerCase());
+                        return `rubus${arr.join('-')}-${localName}`.replace(/--/g, '-');
+                    }
+                    return localName;
+                },
+            },
+        };
+        return config;
+    });
+    const { cwd, absOutputPath, absNodeModulesPath } = api.paths;
+    const outputPath = absOutputPath;
+    const themeTemp = winPath(join(absNodeModulesPath, '.plugin-theme'));
+    function getUid(){
+        return uuid.v1().split('-').pop();
+    }
+    function getThemePath(fileName){
+        return winPath(join(outputPath, 'theme', options.hash ? getUid()+'.'+fileName : fileName));
+    }
+    options.theme.forEach((theme) => {
+        theme._fileName = theme.fileName;
+        theme.fileName = getThemePath(theme.fileName)
+    })
+    // 增加中间件
+    api.addMiddewares(() => {
+        return serveStatic(themeTemp);
+    });
+
+    // 增加一个对象，用于 layout 的配合
+    api.addHTMLHeadScripts(() => [
+        {
+            content: `window.umi_plugin_better_themeVar = ${JSON.stringify(options.theme)}`,
+        },
+    ]);
+
+    // 编译完成之后
+    api.onBuildComplete(({ err }) => {
+        if (err) {
+            return;
+        }
+        api.logger.info('💄  build theme');
+
+        try {
+            if (existsSync(winPath(join(outputPath, 'theme')))) {
+                rimraf.sync(winPath(join(outputPath, 'theme')));
+            }
+            mkdirSync(winPath(join(outputPath, 'theme')));
+        } catch (error) {
+            // console.log(error);
+        }
+
+        buildCss(
+            cwd,
+            options.theme,
+            {
+                min: true,
+                ...options,
+            },
+        )
+            .then(() => {
+                api.logger.log('🎊  build theme success');
+            })
+            .catch((e) => {
+                console.log(e);
+            });
+    });
+
+    // dev 之后
+    api.onDevCompileDone(() => {
+        api.logger.info('cache in :' + themeTemp);
+        api.logger.info('💄  build theme');
+        // 建立相关的临时文件夹
+        try {
+            if (existsSync(themeTemp)) {
+                rimraf.sync(themeTemp);
+            }
+            if (existsSync(winPath(join(themeTemp, 'theme')))) {
+                rimraf.sync(winPath(join(themeTemp, 'theme')));
+            }
+
+            mkdirSync(themeTemp);
+
+            mkdirSync(winPath(join(themeTemp, 'theme')));
+        } catch (error) {
+            // console.log(error);
+        }
+
+        buildCss(
+            cwd,
+            options.theme,
+            {
+                ...options,
+            },
+        )
+            .then(() => {
+                api.logger.log('🎊  build theme success');
+            })
+            .catch((e) => {
+                console.log(e);
+            });
+    });
+}
