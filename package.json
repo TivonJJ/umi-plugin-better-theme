@@ -1,6 +1,6 @@
 {
   "name": "umi-plugin-better-theme",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Dynamic theme for umi",
   "main": "lib/index.js",
   "scripts": {
