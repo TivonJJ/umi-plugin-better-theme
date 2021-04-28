@@ -1,6 +1,7 @@
 const postcss = require('postcss');
 const syntax = require('postcss-less');
 const uniqBy = require('lodash.uniqby');
+const postcssUrl = require('postcss-url');
 
 const fileNameList = [];
 
@@ -18,6 +19,9 @@ const removeNoVarLessPlugin = postcss.plugin('LocalIdentNamePlugin', () => less 
 
 const getVariable = (lessPath, lessText) =>
   postcss([removeNoVarLessPlugin()])
+      .use(postcssUrl({
+          url: 'inline'
+      }))
     .process(lessText, {
       from: lessPath,
       syntax,
