@@ -50,7 +50,7 @@ const loopAllLess = async (parents, ignore = []) => {
       const fileContent = replaceDefaultLess(relayPath);
       // push less file
       promiseList.push(
-        getVariable(relayPath, fileContent).then(
+        getVariable(parents,relayPath, fileContent).then(
           result => {
             importFileList = importFileList.concat(result.messages);
             return result.content.toString();

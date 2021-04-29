@@ -5,6 +5,8 @@ const uniqBy = require('lodash.uniqby');
 const genRule = require('./genRule');
 const getLocalIdentName = require('./getLocalIdentName');
 const winPath = require('slash2');
+const postcssUrl = require('postcss-url');
+const getHash = require('./getHash');
 
 /**
  * 便利所有的规则
@@ -59,7 +61,7 @@ const LocalIdentNamePlugin = postcss.plugin('LocalIdentNamePlugin', options => (
   result.messages = fileNameList;
 });
 
-const AddLocalIdentName = (lessPath, lessText, isModule, publicLessPath) => {
+const AddLocalIdentName = (cwd,lessPath, lessText, isModule, publicLessPath) => {
     const isPublicLess = (()=>{
         if(!publicLessPath)return false;
         if(Array.isArray(publicLessPath)){
@@ -78,6 +80,21 @@ const AddLocalIdentName = (lessPath, lessText, isModule, publicLessPath) => {
             },
         }),
     ])
+        .use(postcssUrl({
+            url: (assets)=>{
+                if(/^~@/.test(assets.url)){
+                    const absPath = path.join(cwd,'src',assets.url.replace(/^~@/,''))
+                    const hash = getHash(absPath)
+                    const en = path.extname(assets.url);
+                    const bn = path.basename(assets.url,en);
+                    return winPath(path.join('../static/',bn+'.'+hash+en));
+                }
+                return assets.url;
+            }
+        }))
+        .use(postcssUrl({
+            url: 'inline'
+        }))
         .process(lessText, {
             from: lessPath,
             syntax,

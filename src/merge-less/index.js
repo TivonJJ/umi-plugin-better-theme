@@ -182,6 +182,7 @@ const genProjectLess = (
         );
       } else {
         const lessContent = await getVariable(
+            filePath,
           tempFilePath,
           fs.readFileSync(tempFilePath),
           loadAny,

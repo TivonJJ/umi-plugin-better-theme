@@ -40,7 +40,7 @@ const genModuleLess = (parents, { isModule, filterFileLess, publicLessPath }) =>
     .forEach(realPath => {
       // post css add localIdentNamePlugin
       const fileContent = replaceDefaultLess(realPath);
-      promiseList.push(AddLocalIdentName(realPath, fileContent, isModule, publicLessPath));
+      promiseList.push(AddLocalIdentName(parents,realPath, fileContent, isModule, publicLessPath));
     });
 
   return Promise.all(promiseList).then(content => {
