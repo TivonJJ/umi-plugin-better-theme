@@ -16,9 +16,16 @@ export default function (api) {
     }
     if (!options) return;
     options = {hash: true, ...options}
-    if (options.runEnv && options.runEnv !== process.env.NODE_ENV) {
-        return;
+
+    let matchEnv = true;
+    if (options.runEnv) {
+        if(Array.isArray(options.runEnv)){
+            matchEnv = options.runEnv.includes(process.env.NODE_ENV)
+        }else {
+            matchEnv = options.runEnv === process.env.NODE_ENV
+        }
     }
+    if(!matchEnv)return;
     api.logger.info('✿ Find theme.config.json')
     api.modifyDefaultConfig((config) => {
         config.cssLoader = {

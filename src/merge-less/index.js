@@ -162,14 +162,14 @@ const genProjectLess = (
     const tempFilePath = winPath(path.join(tempPath, 'temp.less'));
 
     // 获取新旧文件的 hash
-    const newFileHash = genHashCode(content);
-
-    const oldFileHash = genHashCode(getOldFile(tempFilePath));
-    if (newFileHash === oldFileHash) {
-      isEqual = true;
-      // 无需重复生成
-      return false;
-    }
+    // const newFileHash = genHashCode(content);
+    //
+    // const oldFileHash = genHashCode(getOldFile(tempFilePath));
+    // if (newFileHash === oldFileHash) {
+    //   isEqual = true;
+    //   // 无需重复生成
+    //   return false;
+    // }
 
     fs.writeFileSync(tempFilePath, content);
 
