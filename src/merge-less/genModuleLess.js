@@ -7,6 +7,8 @@
 const glob = require('glob');
 const uniqBy = require('lodash.uniqby');
 const { winPath } = require('umi-utils');
+const path = require('path');
+const minimatch = require('minimatch');
 
 const AddLocalIdentName = require('./AddLocalIdentName');
 const replaceDefaultLess = require('./replaceDefaultLess');
@@ -18,11 +20,14 @@ const genModuleLess = (parents, { isModule, filterFileLess, publicLessPath }) =>
   const promiseList = [];
   lessArray = [];
   glob
-    .sync(winPath(`${parents}/**/**.less`), {
-      ignore: ['**/node_modules/**', '**/dist/**', '**/es/**', '**/lib/**', '**/_site/**'],
-    })
+    .sync(winPath(`${parents}/**/**.less`))
     .sort((a, b) => lessOrder(a) - lessOrder(b))
     .filter(filePath => {
+        const relativePath = path.relative(parents,filePath)
+        const ignore = ['**/node_modules/**', '**/dist/**', '**/es/**', '**/lib/**', '**/_site/**'];
+        if(minimatch(relativePath,...ignore)){
+            return false;
+        }
       if (
         filePath.includes('ant.design.pro.less') ||
         filePath.includes('global.less') ||

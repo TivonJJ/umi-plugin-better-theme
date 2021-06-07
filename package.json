@@ -1,6 +1,6 @@
 {
   "name": "umi-plugin-better-theme",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "Dynamic theme for umi",
   "main": "lib/index.js",
   "scripts": {
@@ -16,6 +16,7 @@
     "hash.js": "^1.1.7",
     "less": "^3.10.3",
     "lodash.uniqby": "^4.7.0",
+    "minimatch": "^3.0.4",
     "postcss": "^7.0.6",
     "postcss-less": "^3.1.0",
     "postcss-url": "^9.0.0",
