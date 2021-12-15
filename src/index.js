@@ -9,6 +9,7 @@ const buildCss = require('./merge-less');
 const winPath = require('slash2');
 
 export default function (api) {
+    let options = null;
     function getOptions(){
         let options = null;
         const themeConfigPath = winPath(join(api.paths.cwd, 'config/theme.config.json'));
@@ -80,18 +81,21 @@ export default function (api) {
     });
 
     // 增加一个对象，用于 layout 的配合
-    api.addHTMLHeadScripts(() => [
-        {
-            content: `window.umi_plugin_better_themeVar = ${JSON.stringify(options.theme)}`,
-        },
-    ]);
+    api.addHTMLHeadScripts(() => {
+        options = getOptions();
+        if(!options)return [];
+        return [
+            {
+                content: `window.umi_plugin_better_themeVar = ${JSON.stringify(options.theme)}`,
+            },
+        ]
+    });
 
     // 编译完成之后
     api.onBuildComplete(({err}) => {
         if (err) {
             return;
         }
-        const options = getOptions();
         if(!options)return;
         api.logger.info('💄  build theme');
 
@@ -126,7 +130,6 @@ export default function (api) {
 
     // dev 之后
     api.onDevCompileDone(() => {
-        const options = getOptions();
         if(!options)return;
         api.logger.info('cache in :' + themeTemp);
         api.logger.info('💄  build theme');
