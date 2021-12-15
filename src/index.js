@@ -9,24 +9,33 @@ const buildCss = require('./merge-less');
 const winPath = require('slash2');
 
 export default function (api) {
-    let options = null;
-    const themeConfigPath = winPath(join(api.paths.cwd, 'config/theme.config.json'));
-    if (existsSync(themeConfigPath)) {
-        options = require(themeConfigPath);
-    }
-    if (!options) return;
-    options = {hash: true, ...options}
-
-    let matchEnv = true;
-    if (options.runEnv) {
-        if(Array.isArray(options.runEnv)){
-            matchEnv = options.runEnv.includes(process.env.NODE_ENV)
-        }else {
-            matchEnv = options.runEnv === process.env.NODE_ENV
+    function getOptions(){
+        let options = null;
+        const themeConfigPath = winPath(join(api.paths.cwd, 'config/theme.config.json'));
+        if (existsSync(themeConfigPath)) {
+            options = require(themeConfigPath);
         }
+        if (!options) return;
+        options = {hash: true, ...options}
+
+        let matchEnv = true;
+        if (options.runEnv) {
+            if(Array.isArray(options.runEnv)){
+                matchEnv = options.runEnv.includes(process.env.NODE_ENV)
+            }else {
+                matchEnv = options.runEnv === process.env.NODE_ENV
+            }
+        }
+        if(!matchEnv)return null;
+        options.theme.forEach((theme) => {
+            theme._fileName = theme.fileName;
+            if (options.hash) {
+                theme.fileName = getUid() + '.' + theme.fileName;
+            }
+        })
+        api.logger.info('✿ Find theme.config.json')
+        return options;
     }
-    if(!matchEnv)return;
-    api.logger.info('✿ Find theme.config.json')
     api.modifyDefaultConfig((config) => {
         config.cssLoader = {
             modules: {
@@ -65,12 +74,6 @@ export default function (api) {
         return uuid.v1().split('-').pop();
     }
 
-    options.theme.forEach((theme) => {
-        theme._fileName = theme.fileName;
-        if (options.hash) {
-            theme.fileName = getUid() + '.' + theme.fileName;
-        }
-    })
     // 增加中间件
     api.addMiddewares(() => {
         return serveStatic(themeTemp);
@@ -88,6 +91,8 @@ export default function (api) {
         if (err) {
             return;
         }
+        const options = getOptions();
+        if(!options)return;
         api.logger.info('💄  build theme');
 
         try {
@@ -121,6 +126,8 @@ export default function (api) {
 
     // dev 之后
     api.onDevCompileDone(() => {
+        const options = getOptions();
+        if(!options)return;
         api.logger.info('cache in :' + themeTemp);
         api.logger.info('💄  build theme');
         // 建立相关的临时文件夹
